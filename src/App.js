@@ -1,61 +1,73 @@
 import React from 'react';
-import {Card, Input, Select, Button, Form, Typography, Empty, Descriptions} from 'antd';
-import {callImdbApi, years} from './utils';
+import {
+  Card,
+  Typography,
+  Empty,
+  Row,
+  Divider
+} from 'antd';
 
-import styled from 'styled-components/macro';
+import {callImdbSearchApi} from './utils';
+
+import styled, {createGlobalStyle} from 'styled-components/macro';
+import {Search} from "./components/Search";
+import {Movie} from "./components/Movie";
+import {MovieModal} from "./components/MovieModal";
 
 const {Title} = Typography;
 
+const Global = createGlobalStyle`
+  html {
+    background: #f5c518;
+  }
+`
+
 const App = () => {
-    const [title, setTitle] = React.useState(null);
-    const [year, setYear] = React.useState(null);
-    const [results, setResults] = React.useState(null);
+  const [title, setTitle] = React.useState(null);
+  const [year, setYear] = React.useState(null);
+  const [results, setResults] = React.useState(null);
+  const [result, setResult] = React.useState(null);
 
-    const search = () => {
-        callImdbApi({title, year}).then(results => setResults(results));
-    }
+  const search = () => {
+    callImdbSearchApi({title, year}).then(results => setResults(results));
+  }
 
-    return (
-        <Container>
-            <Card>
-                <Header>
-                    <Title>IMDB SEARCH</Title>
+  const reset = () => {
+    setTitle(null)
+    setYear(null)
+    setResult(null)
+    setResults(null)
+  }
 
-                </Header>
-                <Search>
-                    <Form.Item label="Movie title" name="layout">
-                        <Input size="large" placeholder="Title" value={title}
-                               onChange={(event) => setTitle(event.target.value)}/>
-                    </Form.Item>
-                    <Form.Item label="Year of release" name="layout">
-                        <Select allowClear placeholder="Year" size="large" showSearch
-                                onClear={() => setYear(null)}
-                                value={year}
-                                defaultValue={null}
-                                onSelect={(value) => setYear(value)}
-                                options={years.map(year => ({
-                                    label: year,
-                                    value: year
-                                }))}/>
-                    </Form.Item>
-                    <Button size="large" onClick={() => search()}>Search</Button>
-                </Search>
+  return (
+    <Container>
+      <Global/>
+      <Card>
+        <Header>
+          <Title>IMDB SEARCH</Title>
+        </Header>
 
-                <Results>
+        <Search search={search}
+                setTitle={setTitle}
+                title={title}
+                year={year}
+                setYear={setYear}
+                reset={reset}/>
 
-                    <Title level={3}>Results for: {title} {year}</Title>
-                    {results?.Response === 'False' || !results ? <Empty/> : (<Descriptions title={results?.results}>
-                        <Descriptions.Item label="Year">{results?.Year}</Descriptions.Item>
-                        <Descriptions.Item label="Director">{results?.Director}</Descriptions.Item>
-                        <Descriptions.Item label="Actors">{results?.Actors}</Descriptions.Item>
-                        <Descriptions.Item label="Plot">
-                            {results?.Plot}
-                        </Descriptions.Item>
-                    </Descriptions>)}
-                </Results>
-            </Card>
-        </Container>
-    );
+        <Results>
+          {results?.Response === "False" && <Empty/>}
+          {results?.Response === "True" &&
+            <Divider>Results for: <strong>{title}</strong> {year && '/'} {year} search term</Divider>}
+          <Row gutter={[16, 16]}>
+            {results?.Response === "True" && results.Search.map(movie => (
+              <Movie movie={movie} setResult={setResult}/>))}
+          </Row>
+        </Results>
+
+        <MovieModal result={result} setResult={setResult}/>
+      </Card>
+    </Container>
+  );
 }
 
 const Container = styled.div`
@@ -64,11 +76,9 @@ const Container = styled.div`
 `;
 
 const Header = styled.div``
-const Search = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: normal;
+
+const Results = styled.div`
+  margin: 20px 0 20px;
 `
-const Results = styled.div``
 
 export default App;
