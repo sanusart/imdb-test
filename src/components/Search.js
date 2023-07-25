@@ -18,7 +18,7 @@ export const Search = ({title, year, setYear, setTitle, search, reset}) => (
                                    label: year,
                                    value: year
                                  }))}/>}/>
-      <Button type="primary" size="large" onClick={() => search()}>Search</Button>
+      <Button disabled={!title} type="primary" size="large" onClick={() => search()}>Search</Button>
       {title && <Button type="dashed" size="large" onClick={() => reset()}>Reset</Button>}
     </Space>
   </SearchWrapper>
